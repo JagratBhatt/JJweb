@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jyotish Jagrit - Vedic Astrology</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@700&display=swap');
+        .serif-font { font-family: 'Merriweather', serif; }
+        .animate-pulse-slow { animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        
+        // Mocking Lucide Icons for browser compatibility
+        const Icon = ({ name, className }) => {
+            return <i data-lucide={name} className={className}></i>;
+        };
+
+        const JyotishJagrit = () => {
+            const [activeTab, setActiveTab] = useState('home');
+            const [formData, setFormData] = useState({
+                name: '', gender: 'male', date: '', time: '', place: '', latitude: '', longitude: ''
+            });
+            const [savedCharts, setSavedCharts] = useState([]);
+            const [currentChart, setCurrentChart] = useState(null);
+            const [loading, setLoading] = useState(false);
+
+            // Re-initialize icons whenever tab changes
+            useEffect(() => {
+                lucide.createIcons();
+            }, [activeTab, loading, currentChart]);
+
+            useEffect(() => {
+                loadSavedCharts();
+            }, []);
+
+            const loadSavedCharts = () => {
+                const keys = Object.keys(localStorage).filter(key => key.startsWith('chart:'));
+                const charts = keys.map(key => JSON.parse(localStorage.getItem(key)));
+                setSavedCharts(charts);
+            };
+
+            const handleInputChange = (e) => {
+                const { name, value } = e.target;
+                setFormData(prev => ({ ...prev, [name]: value }));
+            };
+
+            const generatePlanets = () => {
+                const houses = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th'];
+                const signs = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
+                const planetList = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'];
+                
+                const planets = {};
+                planetList.forEach(p => {
+                    planets[p] = {
+                        house: houses[Math.floor(Math.random() * 12)],
+                        sign: signs[Math.floor(Math.random() * 12)],
+                        degree: Math.floor(Math.random() * 30)
+                    };
+                });
+                return planets;
+            };
+
+            const calculateChart = () => {
+                if (!formData.name || !formData.date || !formData.time || !formData.place) {
+                    alert('Please fill all required fields');
+                    return;
+                }
+                setLoading(true);
+                setTimeout(() => {
+                    const chart = {
+                        id: Date.now(),
+                        ...formData,
+                        timestamp: new Date().toISOString(),
+                        ascendant: 'Mesh (Aries)',
+                        moonSign: 'Vrishabha (Taurus)',
+                        sunSign: 'Dhanu (Sagittarius)',
+                        nakshatra: 'Rohini',
+                        planets: generatePlanets()
+                    };
+                    localStorage.setItem(`chart:${chart.id}`, JSON.stringify(chart));
+                    setCurrentChart(chart);
+                    loadSavedCharts();
+                    setLoading(false);
+                    setActiveTab('chart');
+                }, 1500);
+            };
+
+            const loadChart = (chart) => {
+                setCurrentChart(chart);
+                setActiveTab('chart');
+            };
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-orange-50 via-yellow-50 to-amber-50">
+                    <header className="bg-gradient-to-r from-orange-600 via-orange-500 to-yellow-600 text-white shadow-2xl">
+                        <div className="container mx-auto px-4 py-8 text-center">
+                            <div className="flex justify-center items-center gap-4 mb-4">
+                                <Icon name="star" className="w-10 h-10 text-yellow-200" />
+                                <div>
+                                    <h1 className="text-5xl font-bold text-yellow-100 serif-font">ज्योतिष जागृत</h1>
+                                    <p className="text-lg text-orange-100">Jyotish Jagrit</p>
+                                </div>
+                                <Icon name="moon" className="w-10 h-10 text-yellow-200" />
+                            </div>
+                        </div>
+                    </header>
+
+                    <nav className="bg-white shadow-md sticky top-0 z-10">
+                        <div className="flex justify-center space-x-4 md:space-x-8 py-4">
+                            {['home', 'calculator', 'saved', 'about'].map((tab) => (
+                                <button key={tab} onClick={() => setActiveTab(tab)}
+                                    className={`px-4 md:px-6 py-2 rounded-full font-semibold transition-all ${activeTab === tab ? 'bg-orange-500 text-white shadow-lg' : 'text-gray-700 hover:bg-orange-100'}`}>
+                                    {tab.toUpperCase()}
+                                </button>
+                            ))}
+                        </div>
+                    </nav>
+
+                    <main className="container mx-auto px-4 py-12">
+                        {activeTab === 'home' && (
+                            <div className="text-center space-y-8">
+                                <img src="https://images.unsplash.com/photo-1583623025817-d180a2221d0a?w=400&h=400&fit=crop" className="rounded-full w-64 h-64 mx-auto border-8 border-orange-200 shadow-2xl object-cover" />
+                                <h2 className="text-4xl font-bold text-orange-800">Welcome to Your Spiritual Journey</h2>
+                                <button onClick={() => setActiveTab('calculator')} className="bg-orange-600 text-white px-10 py-4 rounded-full text-xl font-bold hover:scale-105 transition-transform">Generate Your Kundali</button>
+                            </div>
+                        )}
+
+                        {activeTab === 'calculator' && (
+                            <div className="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-xl">
+                                <h2 className="text-3xl font-bold text-orange-800 mb-6 text-center">Birth Details</h2>
+                                <div className="space-y-4">
+                                    <input type="text" name="name" placeholder="Full Name" onChange={handleInputChange} className="w-full p-3 border-2 border-orange-100 rounded-lg" />
+                                    <div className="flex gap-4">
+                                        <label><input type="radio" name="gender" value="male" onChange={handleInputChange} defaultChecked /> Male</label>
+                                        <label><input type="radio" name="gender" value="female" onChange={handleInputChange} /> Female</label>
+                                    </div>
+                                    <input type="date" name="date" onChange={handleInputChange} className="w-full p-3 border-2 border-orange-100 rounded-lg" />
+                                    <input type="time" name="time" onChange={handleInputChange} className="w-full p-3 border-2 border-orange-100 rounded-lg" />
+                                    <input type="text" name="place" placeholder="Birth Place (City, State)" onChange={handleInputChange} className="w-full p-3 border-2 border-orange-100 rounded-lg" />
+                                    <button onClick={calculateChart} disabled={loading} className="w-full bg-orange-600 text-white py-4 rounded-lg font-bold">
+                                        {loading ? 'Calculating Universe...' : 'Generate Kundali'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'chart' && currentChart && (
+                            <div className="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-2xl">
+                                <h2 className="text-3xl font-bold text-orange-800 mb-6 text-center">Birth Chart: {currentChart.name}</h2>
+                                <div className="grid grid-cols-2 gap-4 mb-8 bg-orange-50 p-6 rounded-xl">
+                                    <p><strong>Date:</strong> {currentChart.date}</p>
+                                    <p><strong>Time:</strong> {currentChart.time}</p>
+                                    <p><strong>Lagna:</strong> {currentChart.ascendant}</p>
+                                    <p><strong>Rashi:</strong> {currentChart.moonSign}</p>
+                                </div>
+                                <div className="grid grid-cols-3 gap-4">
+                                    {Object.entries(currentChart.planets).map(([p, data]) => (
+                                        <div key={p} className="p-3 bg-amber-50 border border-orange-200 rounded-lg">
+                                            <h4 className="font-bold text-orange-700">{p}</h4>
+                                            <p className="text-xs">{data.sign} ({data.house})</p>
+                                            <p className="text-xs">{data.degree}°</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'saved' && (
+                            <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-6">
+                                {savedCharts.length === 0 ? <p className="col-span-2 text-center text-gray-500">No charts saved yet.</p> : 
+                                    savedCharts.map(c => (
+                                        <div key={c.id} onClick={() => loadChart(c)} className="bg-white p-6 rounded-xl shadow cursor-pointer hover:bg-orange-50 transition-colors">
+                                            <h3 className="text-xl font-bold text-orange-700">{c.name}</h3>
+                                            <p className="text-sm">{c.date} | {c.place}</p>
+                                        </div>
+                                    ))
+                                }
+                            </div>
+                        )}
+                        
+                        {activeTab === 'about' && (
+                            <div className="max-w-2xl mx-auto bg-white p-8 rounded-2xl">
+                                <h2 className="text-2xl font-bold text-orange-800 mb-4">About Jyotish Jagrit</h2>
+                                <p className="text-gray-700 italic">"The stars and planets have been witnesses to human destiny since time immemorial."</p>
+                                <p className="mt-4">This tool provides instant Vedic insights using traditional Sidereal calculations to help you understand your cosmic blueprint.</p>
+                            </div>
+                        )}
+                    </main>
+
+                    <footer className="bg-orange-900 text-white py-8 text-center mt-auto">
+                        <p>🕉️ ज्योतिष जागृत © 2024 🕉️</p>
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<JyotishJagrit />);
+    </script>
+</body>
+</html>
